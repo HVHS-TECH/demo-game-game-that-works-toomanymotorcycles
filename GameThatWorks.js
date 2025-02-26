@@ -19,6 +19,10 @@ var gameState = 0;
 var speedUpgradePrice = 10;
 var nodeSizeUpgradePrice = 10;
 
+function preload() {
+    actionFail = loadSound("../action_fail.wav")
+}
+
 function setup() {
 	console.log("setup: initializing canvas");
 	cnv = new Canvas(windowWidth, windowHeight);
@@ -59,7 +63,26 @@ function handleUpgradeScreen() {
     text("CURRENT SPEED: "+PLAYER_VELOCITY,upgradeButton1.x,upgradeButton1.y + 75)
     fill("white")
     text("CURRENT NODE SIZE: "+NODE_SIZE,upgradeButton2.x,upgradeButton2.y + 75)
+    if (upgradeButton1.mouse.pressed()) {
+        if (nodes >= speedUpgradePrice) {
+            nodes = nodes - speedUpgradePrice;
+            PLAYER_VELOCITY++;
+            speedUpgradePrice += 2;
+        } else {
+            actionFail.play();
+        }
+    }
+    if (upgradeButton2.mouse.pressed()) {
+        if (nodes >= nodeSizeUpgradePrice) {
+            nodes = nodes - nodeSizeUpgradePrice;
+            NODE_SIZE += 5;
+            nodeSizeUpgradePrice += 2;
+        } else {
+            actionFail.play();
+        }
+    }
 }
+ 
 function tryNodeSpawn() {
     if (random(0,RANDOM_VALUE_MAX) < (RANDOM_VALUE_MAX/100)*spawnChancePerFrame) {
         createNode();

@@ -23,13 +23,17 @@ function preload() {
     actionFail = loadSound("../action_fail.wav")
 }
 
+// Didn't write this but I know how it works.
+const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
+
 function setup() {
 	console.log("setup: initializing canvas");
 	cnv = new Canvas(windowWidth, windowHeight);
 	player = new Sprite(windowWidth/2,windowHeight/2,50,50,'d');
-    upgradeButton1 = new Sprite(windowWidth/4,windowHeight/2,250,100,'d');
-    upgradeButton2 = new Sprite(windowWidth-windowWidth/4,windowHeight/2,250,100,'d');
-    playButton = new Sprite(windowWidth/2,windowHeight - windowHeight/4,250,100,'d');
+    upgradeButton1 = new Sprite(windowWidth/4,windowHeight/2,250,100,'s');
+    upgradeButton2 = new Sprite(windowWidth-windowWidth/4,windowHeight/2,250,100,'s');
+    playButton = new Sprite(windowWidth/2,windowHeight - windowHeight/4,250,100,'s');
+    powerCore = new Sprite(windowWidth/2,windowHeight/2,200,200,'s');
 	player.color = "black";
     upgradeButton1.color = "#00b3ff";
     upgradeButton1.textSize = 25
@@ -40,6 +44,9 @@ function setup() {
     playButton.color = "#ffa200";
     playButton.textSize = 50
     playButton.text = "GO"
+    allSprites.overlap(upgradeButton1)
+    allSprites.overlap(upgradeButton2)
+    allSprites.overlap(playButton)
     nodes = new Group()
 }
 	
@@ -81,8 +88,53 @@ function handleUpgradeScreen() {
             actionFail.play();
         }
     }
+    if (playButton.mouse.pressed()) {
+        gameState = 1;
+    }
 }
- 
+
+async function lose() {
+    background("lightblue")
+    player.vel.x = 0;
+    player.vel.y = 0;
+    player.rotationSpeed = 0;
+    background("black")
+    player.colour = "white";
+    nodes.colour = "white"
+    powerCore.colour = "white";
+    await sleep(500)
+    powerCore.colour = "red";
+    await sleep(500)
+    powerCore.colour = "white";
+    await sleep(500)
+    powerCore.colour = "red";
+    await sleep(500)
+    powerCore.colour = "white";
+    await sleep(500)
+    powerCore.colour = "red";
+    await sleep(500)
+    powerCore.colour = "white";
+    await sleep(500)
+    powerCore.colour = "red";
+    await sleep(1500)
+    background("black")
+    player.visible = false;
+    powerCore.visible = false;
+    var explosion = new Sprite(windowWidth/2,windowHeight/2,windowWidth,windowHeight,"s");
+    allSprites.overlap(explosion)
+    explosion.opacity = 1;
+    nodes.removeAll()
+    for (i=0; i<10; i++) {
+        await sleep(100)
+        explosion.opacity = explosion.opacity-0.1;
+    }
+}
+
+async function loseInit() {
+    gameState = 4;
+    await lose()
+}
+
 function tryNodeSpawn() {
     if (random(0,RANDOM_VALUE_MAX) < (RANDOM_VALUE_MAX/100)*spawnChancePerFrame) {
         createNode();
@@ -104,7 +156,7 @@ function checkNodeTimeout() {
             nodes[i].colour = "red";
         }
         if (nodes[i].timeSpawned >= TIMEOUT*60) {
-            console.log("LOSE")
+            gameState = 3;
         }
     };
 }
@@ -137,6 +189,7 @@ function handlePlayerMovement() {
 }
 
 function updateScore() {
+    fill("black")
     textAlign(CENTER)
     textSize(25)
     text("SCORE",windowWidth/2, 0 + windowHeight/10)
@@ -147,10 +200,16 @@ function updateScore() {
 function draw() {
     if (gameState == 0) {
         background("black")
+        upgradeButton1.visible = true;
+        upgradeButton2.visible = true;
+        playButton.visible = true;
         player.visible = false;
         handleUpgradeScreen()
     }
     if (gameState == 1) {
+        upgradeButton1.visible = false;
+        upgradeButton2.visible = false;
+        playButton.visible = false;
         player.visible = true;
         background("lightblue");
         handlePlayerMovement()
@@ -165,7 +224,9 @@ function draw() {
         nodes.overlap(player);
         nodes.overlapping(player, (node) => {console.log("Node collected"),node.remove(), score++, spawnChanceLock = false;}) 
     }
-	
+	if (gameState == 3) {
+        loseInit()
+    }
 }
 
 /*******************************************************/

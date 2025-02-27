@@ -21,7 +21,6 @@ var nodeSizeUpgradePrice = 2;
 var redNodes = 0;
 
 function preload() {
-    //gameFont = loadFont('../Tiny5-Regular.tts');
     actionFail = loadSound("../action_fail.wav")
     gameOverSound = loadSound("../gameover.wav")
     gameOverSound2 = loadSound("../gameover2.wav")
@@ -63,7 +62,7 @@ function setup() {
     allSprites.overlap(playButton)
     allSprites.overlap(menuButton)
     nodes = new Group()
-    //textFont(gameFont)
+
 }
 	
 /*******************************************************/

@@ -62,7 +62,10 @@ function setup() {
     allSprites.overlap(playButton)
     allSprites.overlap(menuButton)
     nodes = new Group()
-
+    nodeLines = new Group()
+    nodeLines.overlap(powerCore)
+    nodeLines.overlap(nodes)
+    nodeLines.overlap(nodeLines)
 }
 	
 /*******************************************************/
@@ -120,6 +123,7 @@ function reset() {
 
 async function lose() {
     background("lightblue")
+    nodeLines.removeAll()
     collectedNodes = collectedNodes+score;
     player.vel.x = 0;
     player.vel.y = 0;
@@ -182,25 +186,37 @@ function tryNodeSpawn() {
 function createNode() {
     console.log("Node created")
     newNode = new Sprite(100,100,NODE_SIZE,NODE_SIZE);
+    newNodeLine = new Sprite(100,100,1,1);
     newNode.x = random(50, windowWidth - 50);
     newNode.y = random(50, windowHeight - 50);
+    newNodeLine.pos = newNode.pos;
     newNode.image = nodeTexture;
     newNode.image.resize(NODE_SIZE,NODE_SIZE);
     newNode.timeSpawned = 0;
     nodes.add(newNode);
+    nodeLines.add(newNodeLine);
 }
 
 function checkNodeTimeout() {
+    strokeWeight(10)
     for (i=0; i < nodes.length; i++) {
         nodes[i].timeSpawned = nodes[i].timeSpawned + 1;
-        if (nodes[i].timeSpawned >= (TIMEOUT*60)-(TIMEOUT*60)/4) {
-            nodes[i].tint = "red";
-            redNodes++;
+        if (nodes[i].timeSpawned == (TIMEOUT*60)-(TIMEOUT*60)/4) {
+            console.log("TIMEOUT WARN")
+            redNodes++; 
         }
+        if (nodes[i].timeSpawned >= (TIMEOUT*60)-(TIMEOUT*60)/4) {
+            stroke("red")
+        } else {
+            stroke("black")
+        }
+        nodeLines[i].moveTowards(powerCore,0.002)
+        line(nodes[i].x,nodes[i].y,nodeLines[i].x,nodeLines[i].y)
         if (nodes[i].timeSpawned >= TIMEOUT*60) {
             gameState = 3;
         }
-    };
+    }
+    strokeWeight(0)
 }
 
 function handlePlayerMovement() {
@@ -269,7 +285,8 @@ function draw() {
             console.log("SPAWN CHANCE INCREASED - NEW CHANCE: "+spawnChancePerFrame+"%")
         }
         nodes.overlap(player);
-        nodes.overlapping(player, (node) => {console.log("Node collected"),node.remove(), score++, spawnChanceLock = false; if (node.tint == "red") {redNodes--}})
+        nodes.overlapping(player, (node) => {console.log("Node collected"),node.remove(), /*nodeLines.findIndex(node).remove(), CAUSES AN ERROR*/ score++, spawnChanceLock = false; if (node.timeSpawned >= (TIMEOUT*60)-(TIMEOUT*60)/4) {redNodes--}})
+        console.log(redNodes)
             if (redNodes > 0) {
                 if (!timeoutWarn.isPlaying()) {
                     timeoutWarn.loop();

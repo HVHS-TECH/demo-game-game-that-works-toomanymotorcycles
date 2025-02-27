@@ -16,11 +16,12 @@ var score = 0;
 var spawnChanceLock = true;
 var collectedNodes = 0;
 var gameState = 0;
-var speedUpgradePrice = 10;
-var nodeSizeUpgradePrice = 10;
+var speedUpgradePrice = 2;
+var nodeSizeUpgradePrice = 2;
 
 function preload() {
     actionFail = loadSound("../action_fail.wav")
+    powercoreTexture = loadImage("../powercore_texture.png")
 }
 
 // Didn't write this but I know how it works.
@@ -33,7 +34,10 @@ function setup() {
     upgradeButton1 = new Sprite(windowWidth/4,windowHeight/2,250,100,'s');
     upgradeButton2 = new Sprite(windowWidth-windowWidth/4,windowHeight/2,250,100,'s');
     playButton = new Sprite(windowWidth/2,windowHeight - windowHeight/4,250,100,'s');
+    menuButton = new Sprite(windowWidth/2,windowHeight - windowHeight/3,250,100,'s');
     powerCore = new Sprite(windowWidth/2,windowHeight/2,200,200,'s');
+    powercoreTexture.resize(200,200);
+    powerCore.image = powercoreTexture;
 	player.color = "black";
     upgradeButton1.color = "#00b3ff";
     upgradeButton1.textSize = 25
@@ -44,9 +48,13 @@ function setup() {
     playButton.color = "#ffa200";
     playButton.textSize = 50
     playButton.text = "GO"
+    menuButton.color = "#ffa200";
+    menuButton.textSize = 50
+    menuButton.text = "MENU"
     allSprites.overlap(upgradeButton1)
     allSprites.overlap(upgradeButton2)
     allSprites.overlap(playButton)
+    allSprites.overlap(menuButton)
     nodes = new Group()
 }
 	
@@ -55,6 +63,7 @@ function setup() {
 /*******************************************************/
 
 function handleUpgradeScreen() {
+    score = 0;
     textAlign(LEFT)
     textSize(25)
     fill("white")
@@ -71,8 +80,8 @@ function handleUpgradeScreen() {
     fill("white")
     text("CURRENT NODE SIZE: "+NODE_SIZE,upgradeButton2.x,upgradeButton2.y + 75)
     if (upgradeButton1.mouse.pressed()) {
-        if (nodes >= speedUpgradePrice) {
-            nodes = nodes - speedUpgradePrice;
+        if (collectedNodes >= speedUpgradePrice) {
+            collectedNodes -= speedUpgradePrice;
             PLAYER_VELOCITY++;
             speedUpgradePrice += 2;
         } else {
@@ -80,8 +89,8 @@ function handleUpgradeScreen() {
         }
     }
     if (upgradeButton2.mouse.pressed()) {
-        if (nodes >= nodeSizeUpgradePrice) {
-            nodes = nodes - nodeSizeUpgradePrice;
+        if (collectedNodes >= nodeSizeUpgradePrice) {
+            collectedNodes -= nodeSizeUpgradePrice;
             NODE_SIZE += 5;
             nodeSizeUpgradePrice += 2;
         } else {
@@ -93,41 +102,58 @@ function handleUpgradeScreen() {
     }
 }
 
+function reset() {
+    powerCore.tint = "white";
+    player.x = windowWidth / 2;
+    player.y = windowHeight / 2;
+    spawnChancePerFrame = 1;
+    score = 0;
+    spawnChanceLock = true;
+}
+
 async function lose() {
     background("lightblue")
+    collectedNodes = collectedNodes+score;
     player.vel.x = 0;
     player.vel.y = 0;
     player.rotationSpeed = 0;
     background("black")
     player.colour = "white";
     nodes.colour = "white"
-    powerCore.colour = "white";
+    powerCore.tint = "white";
     await sleep(500)
-    powerCore.colour = "red";
+    powerCore.tint = "red";
     await sleep(500)
-    powerCore.colour = "white";
+    powerCore.tint = "white";
     await sleep(500)
-    powerCore.colour = "red";
+    powerCore.tint = "red";
     await sleep(500)
-    powerCore.colour = "white";
+    powerCore.tint = "white";
     await sleep(500)
-    powerCore.colour = "red";
+    powerCore.tint = "red";
     await sleep(500)
-    powerCore.colour = "white";
+    powerCore.tint = "white";
     await sleep(500)
-    powerCore.colour = "red";
+    powerCore.tint = "red";
     await sleep(1500)
-    background("black")
+    background("white")
     player.visible = false;
     powerCore.visible = false;
-    var explosion = new Sprite(windowWidth/2,windowHeight/2,windowWidth,windowHeight,"s");
-    allSprites.overlap(explosion)
-    explosion.opacity = 1;
     nodes.removeAll()
-    for (i=0; i<10; i++) {
-        await sleep(100)
-        explosion.opacity = explosion.opacity-0.1;
-    }
+    await sleep(500)
+    background("black")
+    await sleep(1000)
+    textAlign(CENTER)
+    fill("white")
+    textSize(100)
+    text("Game Over", windowWidth/2,windowHeight/2-100);
+    await sleep(500)
+    textSize(50)
+    text("Score: "+score, windowWidth/2,windowHeight/2+10);
+    text("NODES: "+collectedNodes,windowWidth/15,windowHeight/15)
+    await sleep(1000)
+    menuButton.visible = true;
+    gameState = 5;
 }
 
 async function loseInit() {
@@ -203,6 +229,8 @@ function draw() {
         upgradeButton1.visible = true;
         upgradeButton2.visible = true;
         playButton.visible = true;
+        menuButton.visible = false;
+        powerCore.visible = true;
         player.visible = false;
         handleUpgradeScreen()
     }
@@ -210,7 +238,10 @@ function draw() {
         upgradeButton1.visible = false;
         upgradeButton2.visible = false;
         playButton.visible = false;
+        menuButton.visible = false;
+        powerCore.visible = true;
         player.visible = true;
+        player.colour = "black";
         background("lightblue");
         handlePlayerMovement()
         checkNodeTimeout()
@@ -226,6 +257,12 @@ function draw() {
     }
 	if (gameState == 3) {
         loseInit()
+    }
+    if (gameState == 5) {
+        if (menuButton.mouse.pressed()) {
+            reset()
+            gameState = 0;
+        }
     }
 }
 

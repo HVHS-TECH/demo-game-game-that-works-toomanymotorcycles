@@ -18,10 +18,17 @@ var collectedNodes = 0;
 var gameState = 0;
 var speedUpgradePrice = 2;
 var nodeSizeUpgradePrice = 2;
+var redNodes = 0;
 
 function preload() {
+    //gameFont = loadFont('../Tiny5-Regular.tts');
     actionFail = loadSound("../action_fail.wav")
+    gameOverSound = loadSound("../gameover.wav")
+    gameOverSound2 = loadSound("../gameover2.wav")
+    timeoutWarn = loadSound("../timeoutWarn.wav")
+    overloadAlarm = loadSound("../overloadSiren.wav")
     powercoreTexture = loadImage("../powercore_texture.png")
+    nodeTexture = loadImage("../node_texture.png")
 }
 
 // Didn't write this but I know how it works.
@@ -56,6 +63,7 @@ function setup() {
     allSprites.overlap(playButton)
     allSprites.overlap(menuButton)
     nodes = new Group()
+    //textFont(gameFont)
 }
 	
 /*******************************************************/
@@ -117,11 +125,14 @@ async function lose() {
     player.vel.x = 0;
     player.vel.y = 0;
     player.rotationSpeed = 0;
+    redNodes = 0;
+    timeoutWarn.stop();
     background("black")
     player.colour = "white";
     nodes.colour = "white"
     powerCore.tint = "white";
     await sleep(500)
+    overloadAlarm.play();
     powerCore.tint = "red";
     await sleep(500)
     powerCore.tint = "white";
@@ -135,11 +146,14 @@ async function lose() {
     powerCore.tint = "white";
     await sleep(500)
     powerCore.tint = "red";
-    await sleep(1500)
+    await sleep(500)
+    overloadAlarm.stop();
     background("white")
     player.visible = false;
     powerCore.visible = false;
     nodes.removeAll()
+    gameOverSound.play();
+    gameOverSound2.play();
     await sleep(500)
     background("black")
     await sleep(1000)
@@ -171,6 +185,8 @@ function createNode() {
     newNode = new Sprite(100,100,NODE_SIZE,NODE_SIZE);
     newNode.x = random(50, windowWidth - 50);
     newNode.y = random(50, windowHeight - 50);
+    newNode.image = nodeTexture;
+    newNode.image.resize(NODE_SIZE,NODE_SIZE);
     newNode.timeSpawned = 0;
     nodes.add(newNode);
 }
@@ -178,8 +194,9 @@ function createNode() {
 function checkNodeTimeout() {
     for (i=0; i < nodes.length; i++) {
         nodes[i].timeSpawned = nodes[i].timeSpawned + 1;
-        if (nodes[i].timeSpawned >= (TIMEOUT*60)-(TIMEOUT*60)/5) {
-            nodes[i].colour = "red";
+        if (nodes[i].timeSpawned >= (TIMEOUT*60)-(TIMEOUT*60)/4) {
+            nodes[i].tint = "red";
+            redNodes++;
         }
         if (nodes[i].timeSpawned >= TIMEOUT*60) {
             gameState = 3;
@@ -253,7 +270,14 @@ function draw() {
             console.log("SPAWN CHANCE INCREASED - NEW CHANCE: "+spawnChancePerFrame+"%")
         }
         nodes.overlap(player);
-        nodes.overlapping(player, (node) => {console.log("Node collected"),node.remove(), score++, spawnChanceLock = false;}) 
+        nodes.overlapping(player, (node) => {console.log("Node collected"),node.remove(), score++, spawnChanceLock = false; if (node.tint == "red") {redNodes--}})
+            if (redNodes > 0) {
+                if (!timeoutWarn.isPlaying()) {
+                    timeoutWarn.loop();
+                }
+            } else {
+                timeoutWarn.stop();
+            }
     }
 	if (gameState == 3) {
         loseInit()

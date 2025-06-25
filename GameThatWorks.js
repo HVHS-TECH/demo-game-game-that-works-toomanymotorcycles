@@ -21,13 +21,13 @@ var nodeSizeUpgradePrice = 2;
 var redNodes = 0;
 
 function preload() {
-    actionFail = loadSound("../action_fail.wav")
-    gameOverSound = loadSound("../gameover.wav")
-    gameOverSound2 = loadSound("../gameover2.wav")
-    timeoutWarn = loadSound("../timeoutWarn.wav")
-    overloadAlarm = loadSound("../overloadSiren.wav")
-    powercoreTexture = loadImage("../powercore_texture.png")
-    nodeTexture = loadImage("../node_texture.png")
+    actionFail = loadSound("./action_fail.wav")
+    gameOverSound = loadSound("./gameover.wav")
+    gameOverSound2 = loadSound("./gameover2.wav")
+    timeoutWarn = loadSound("./timeoutWarn.wav")
+    overloadAlarm = loadSound("./overloadSiren.wav")
+    powercoreTexture = loadImage("./powercore_texture.png")
+    nodeTexture = loadImage("./node_texture.png")
 }
 
 // Didn't write this but I know how it works.

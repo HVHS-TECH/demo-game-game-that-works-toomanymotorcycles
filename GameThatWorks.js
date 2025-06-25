@@ -300,6 +300,7 @@ function draw() {
     }
     if (gameState == 5) {
         if (menuButton.mouse.pressed()) {
+            window.gghEntryHandler.recordEntry("highscore",score);
             reset()
             gameState = 0;
         }
